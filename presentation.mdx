@@ -1,0 +1,225 @@
+import { Appear, Notes } from "mdx-deck";
+import * as mdxThemes from "mdx-deck/themes";
+
+export const theme = mdxThemes.future;
+
+---
+
+# Part 1 - WordPress Sync
+
+---
+
+## CHANGELOG
+
+…how did we get here?
+
+---
+
+## v0 - no sync
+
+- manually recreated content in each environment
+
+<Notes>
+
+(read slide)
+
+not going into issues because you can imagine what issues arose from this
+
+</Notes>
+
+---
+
+## v1 - current
+
+- dev / authoring / production environments
+- code: dev → authoring → production
+- content pushed dev → authoring until ???
+- content written in authoring, pushed to other environments
+
+---
+
+## v1 - Ideal content sync
+
+[![](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gICAgRGV2LT4-QXV0aG9yaW5nOiBJbml0aWFsIGNvbnRlbnRcbiAgICBBdXRob3JpbmctPj5EZXY6IENvbnRlbnQgZnJvbSBjbGllbnQvZGV2c1xuICAgIEF1dGhvcmluZy0-PlByb2R1Y3Rpb246IFB1c2ggY2hhbmdlcyBsaXZlIiwibWVybWFpZCI6eyJ0aGVtZSI6ImRlZmF1bHQifSwidXBkYXRlRWRpdG9yIjpmYWxzZSwiYXV0b1N5bmMiOnRydWUsInVwZGF0ZURpYWdyYW0iOmZhbHNlfQ)](https://mermaid-js.github.io/mermaid-live-editor/edit##eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gICAgRGV2LT4-QXV0aG9yaW5nOiBJbml0aWFsIGNvbnRlbnRcbiAgICBBdXRob3JpbmctPj5EZXY6IENvbnRlbnQgZnJvbSBjbGllbnQvZGV2c1xuICAgIEF1dGhvcmluZy0-PlByb2R1Y3Rpb246IFB1c2ggY2hhbmdlcyBsaXZlIiwibWVybWFpZCI6IntcbiAgXCJ0aGVtZVwiOiBcIlwiXG59IiwidXBkYXRlRWRpdG9yIjpmYWxzZSwiYXV0b1N5bmMiOnRydWUsInVwZGF0ZURpYWdyYW0iOmZhbHNlfQ)
+
+---
+
+## v1 - Realistic sync
+
+[![](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gICAgcGFydGljaXBhbnQgRGV2XG4gICAgcGFydGljaXBhbnQgQXV0aG9yaW5nXG4gICAgcGFydGljaXBhbnQgUHJvZHVjdGlvblxuXG4gICAgRGV2LT4-QXV0aG9yaW5nOiBDb250ZW50XG4gICAgQXV0aG9yaW5nLT4-RGV2OiBDb250ZW50XG4gICAgQXV0aG9yaW5nLT4-UHJvZHVjdGlvbjogQ29udGVudFxuICAgIFByb2R1Y3Rpb24tPj5BdXRob3Jpbmc6IENvbnRlbnRcblxuICAgIERldi0-PlByb2R1Y3Rpb246IENvZGUiLCJtZXJtYWlkIjp7InRoZW1lIjoiZGVmYXVsdCJ9LCJ1cGRhdGVFZGl0b3IiOmZhbHNlLCJhdXRvU3luYyI6dHJ1ZSwidXBkYXRlRGlhZ3JhbSI6ZmFsc2V9)](https://mermaid-js.github.io/mermaid-live-editor/edit/##eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gICAgcGFydGljaXBhbnQgRGV2XG4gICAgcGFydGljaXBhbnQgQXV0aG9yaW5nXG4gICAgcGFydGljaXBhbnQgUHJvZHVjdGlvblxuXG4gICAgRGV2LT4-QXV0aG9yaW5nOiBDb250ZW50XG4gICAgQXV0aG9yaW5nLT4-RGV2OiBDb250ZW50XG4gICAgQXV0aG9yaW5nLT4-UHJvZHVjdGlvbjogQ29udGVudFxuICAgIFByb2R1Y3Rpb24tPj5BdXRob3Jpbmc6IENvbnRlbnRcblxuICAgIERldi0-PlByb2R1Y3Rpb246IENvZCIsIm1lcm1haWQiOiJ7XG4gIFwidGhlbWVcIjogXCJkZWZhdWx0XCJcbn0iLCJ1cGRhdGVFZGl0b3IiOmZhbHNlLCJhdXRvU3luYyI6dHJ1ZSwidXBkYXRlRGlhZ3JhbSI6ZmFsc2V9)
+
+<Notes>
+
+Realistically, you end up needing to sync from production because:
+
+- clients change stuff in production by accident
+- user content is being created in production
+
+</Notes>
+
+---
+
+## Issues
+
+- ❗ content created on production can be lost with sync
+  - user-created content often uses same table as posts/pages
+- content often ends up out-of-sync between all environments
+- doesn’t support multiple projects very well (push all or nothing)
+- when should content start in authoring instead of dev?
+- requires client to use as intended
+
+<Notes>
+
+Unfortunately, a lot of plugins - including e-commerce plugins like WooCommerce - use the official WP recommendation to use `wp_posts` and `wp_postmeta` for data.
+This makes a deterministic content sync nearly impossible once content drifts.
+
+(skip to 3rd point "doesn’t support multiple projects…")
+
+</Notes>
+
+---
+
+## v2 - proposed
+
+> from https://pantheon.io/docs/pantheon-workflow
+
+- slight environment rename: _authoring_ is now _staging_ (again)
+- content is pushed _once_ during setup
+- content only moves down production → staging → dev
+- code only moves up dev → staging → production
+
+---
+
+## v2 - Ideal sync
+
+[![](https://mermaid.ink/img/eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gICAgcGFydGljaXBhbnQgRGV2XG4gICAgcGFydGljaXBhbnQgU3RhZ2luZ1xuICAgIHBhcnRpY2lwYW50IFByb2R1Y3Rpb25cblxuICAgIFByb2R1Y3Rpb24tPj5EZXY6IENvbnRlbnRcblxuICAgIERldi0-PlByb2R1Y3Rpb246IENvZGUiLCJtZXJtYWlkIjp7InRoZW1lIjoiZGVmYXVsdCJ9LCJ1cGRhdGVFZGl0b3IiOmZhbHNlLCJhdXRvU3luYyI6dHJ1ZSwidXBkYXRlRGlhZ3JhbSI6ZmFsc2V9)](https://mermaid-js.github.io/mermaid-live-editor/edit/##eyJjb2RlIjoic2VxdWVuY2VEaWFncmFtXG4gICAgcGFydGljaXBhbnQgRGV2XG4gICAgcGFydGljaXBhbnQgU3RhZ2luXG4gICAgcGFydGljaXBhbnQgUHJvZHVjdGlvblxuXG4gICAgUHJvZHVjdGlvbi0-PkRldjogQ29udGVudFxuXG4gICAgRGV2LT4-UHJvZHVjdGlvbjogQ29kZSIsIm1lcm1haWQiOiJ7XG4gIFwidGhlbWVcIjogXCJkZWZhdWx0XCJcbn0iLCJ1cGRhdGVFZGl0b3IiOmZhbHNlLCJhdXRvU3luYyI6dHJ1ZSwidXBkYXRlRGlhZ3JhbSI6ZmFsc2V9)
+
+---
+
+## Resolutions
+
+- content is created on production, so it shouldn’t be lost
+- easier to know how to sync
+- multiple projects can be supported _if_ using drafts
+- more clear how to support an unknown WordPress project
+- still requires client training, but less likely to cause issues
+
+---
+
+## Potential Improvements
+
+<div>
+
+**direct:**
+
+- increase automation
+- test with real projects
+
+**indirect:**
+
+- document local development
+- process for scaling WP
+
+</div>
+
+---
+
+## Should we use it now?
+
+<Notes>
+
+Should we use it now?
+
+It depends. If you don’t have issues with your current project, you can keep going.
+It’d be nice to eventually have all projects using the same process, but this needs more automation before migrating everything.
+
+If you have time to test, this would be a great area to test out and gather feedback on.
+
+</Notes>
+
+---
+
+**\*\*\***
+
+---
+
+# Part 2 - TypeScript
+
+<Appear>
+
+> with new Pipeline failures!
+
+</Appear>
+
+---
+
+## What is TypeScript
+
+- TypeScript is JavaScript + a type system
+- TypeScript uses structural typing
+  - types are compatible based on structure rather than naming
+
+<Notes>
+
+If you’ve worked with other languages with static typing (e.g. C#, Java, Rust, Swift, etc.), you’ve likely used a nominal type system.
+This essentially means types are only compatible if they have the same name (or a type is explicitly subtype of another).
+
+In contrast, TypeSciprt uses a structural type system. This allows types to be the same if they have the same structure (e.g. two objects have the same properties).
+
+</Notes>
+
+---
+
+## Resources to learn TypeScript
+
+> [Official Handbook](https://www.typescriptlang.org/docs/handbook/intro.html)
+
+---
+
+## A couple examples
+
+- [Interfaces](https://www.typescriptlang.org/play?strict=true&noEmitOnError=true&q=348#code/PTAEBUE8AcFNQPYCMBWsDGAXAzqArtgJYB2A5qAIbGgmawBOAZherAFwBQHtDzroAVWwNQAbw6gaAEzahieALZIGAbglyKC9qGyZ6JUmsn0EAG1jYA-LN36yAbQC6agL5cQoAIKhMMeBVNCClwAdwQ8UylKU2wEUDD6AGtODl84LxiEIREAXjF1Qhk5RWV6Iw0tGz0DcpNzKyq7UidXdzAoOABldH1oTHjCU1NQdApMdAALUAVCbAUxyYMfP2wU9ARiXVAkCikASSLs+lA88UlC2QByFE0LS4AadWJbq4ApW+xLjhc1Dg8O2DdXr9EKDYYBWIjBZTGbYIhkUDQExweiYQgWNYbLbEBAHWRHE75STPSqgS7vLSfb6-DyAMgIEMdYAAPPQURHIhhoiygAAUjAZoECdHoEIAlJjNv1mayAAoc1GQfHCY6nApFAAsACZHsSXmSKXcdTRsABhBBmWR6PCwaltUAAURZIvZCBRXNwFHo-iGCBCsCi-OOOOIAFohQwISlGHhiFhCBtQIxYOMJkceaKiaAvZg8PRqGdJNJZFqjbrSeSPg91OdTebTJb6Nb1D9vlx1pL8MqAOqETATR2y5GrQTKwlJlNp0U0sB7RigSDhOSwf0+OJ0IYQPxAwh9UAAIj2oESOJC8QmY1Ae0uClAUgQBj393ni9G1AI8AABsEPxKtlQEH2DBHD2fYDiKcqurgqrnBq2pPHqFaUlWNZmhaPiNjaLiULgRxqEAA)
+- [Arrays](https://www.typescriptlang.org/play?#code/PTAEBUE8AcFNQIYCckMgZ1AV3QSwHYDmoALgBbwDGA9vibHZtQGakWIpqjPUA2v1AO6wAJqABGkUAAMA2gF1pALgBQKkjHgBVdLCQAlPrEwBeUOhJIChBQG41GuKABitEgGVcAL2OgzACgsrIlAAH1B8LABbcT0ASjs1EFAATWosUEoEfERedGpsXRkAQU5IAB4oOAA+ZQdNUGK86h09Q15fM1LUCqDravtHeAAhJFgEAGtoagISU0ay8r6Q8MiYvQGksDSMrJyRWGYCeAAiEixoDvQTxHwxI4APUQBaDqJyDh7MHGs2eCHQAQ8AcJKhKMZVOoGs5YCRKGQtPoADJ+cyWayDaGw+EACXA4AACu4SAhzvM1rEkJinDC4WRiaScKjZLT4YikQAaFzYsh4wkMsnyewqZhYfCUEi4WigQiwvlEklk-xYJB5JRo4I2eRxdUEpDUKK4XTlVn0xU4BTVUAAbxUoFAY3OSByeoNRtgADoEPx-Hb7dhVegPVEENByq7DcbTQKcNVqv4EOhIOKA7w-FbZH7-amOVn-QhBAhcCRuDzlaq4h7yAx-GNTFa6x6LIz0HE89q-XF7ABfNQ0fAWVPzTP2gDkZBIJGg6CUIAAVvl8JcEOCyHwDkgqzBcDQDh6aFFgCRqCJqOhgABGUe5scTqcz+eL5er9d6LfQHcnz0Ho8ns-AZ4rxUIU1FlEh5RjdByzyStq3wWtjGmAdOmqP06yQ3R0DzD0jl4egkH8fxZC5ZtBTidM0RbUArQAJgABjottsxw6gkAAURXMhCNkFVeBI810C5cQEBEABJO5YAebUKP7fIOg9ARCH8aQABJrVInBu1AZ5QDU3ju2kOI2y7FQgA)
+
+---
+
+## Why use TypeScript?
+
+1. helpful for tooling
+   - better autocomplete, inline documentation, basic error checking
+2. helpful for projects likely to be refactored or maintained by several people
+3. catch more errors at build-time
+
+---
+
+## When to use or not use?
+
+- Projects should allow mixing of JavaScript or TypeScript
+  - “eject” to JavaScript if there’s an issue
+- TypeScript for things used by others; likely to be refactored/maintained
+  - libraries, tools, frequently used components, complex components
+- JavaScript for end-use or less-maintained projects
+  - examples: Next.js page, components used less frequently, simple components
+
+<Notes>
+
+This is general guidance, not a rule!
+
+Think of TypeScript as writing documentation for other developers. If it’s unnecessary, you don’t need it.
+
+Remember, it should be fine to use JavaScript if there’s an issue!
+
+General rule of thumb:
+
+- TypeScript for things used by others and things likely to be refactored/maintained
+  - examples: libraries, tools, frequently used components, complex components
+- JavaScript for end-use or less-maintained projects
+  - examples: Next.js page, components used less frequently, simple components
+
+</Notes>
+
+---
+
+## Next steps
+
+- add guidance to starter projects
